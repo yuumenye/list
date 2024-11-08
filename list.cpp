@@ -36,7 +36,7 @@ void list_traverse(struct list *list)
     putchar('\n');
 }
 
-/* return key index in an array */
+/* return x index in an array */
 int list_search(struct list *list, const int x)
 {
     int i = list->head;
@@ -49,12 +49,26 @@ int list_search(struct list *list, const int x)
 void list_prepend(struct list *list, const int x)
 {
     int i = list->free;
-    list->data[list->free++].key = x;
+    list->data[i].key = x;
     list->data[i].next = list->head;
     list->data[i].prev = 0;
     if (list->head != 0)
         list->data[list->head].prev = i;
     list->head = i;
+    ++list->free;
+}
+
+/* insert after tail */
+void list_append(struct list *list, const int x)
+{
+    int i = list->free;
+    list->data[i].key = x;
+    list->data[i].next = 0;
+    list->data[i].prev = list->tail;
+    if (list->tail != 0)
+        list->data[list->tail].next = i;
+    list->tail = i;
+    ++list->free;
 }
 
 /* insert x after y */
@@ -62,13 +76,13 @@ void list_insert(struct list *list, const int x, const int y)
 {
     int j = list_search(list, y);
     int i = list->free;
-    list->data[list->free++].key = x;
-
+    list->data[i].key = x;
     list->data[i].next = list->data[j].next;
     list->data[i].prev = j;
     if (list->data[j].next != 0)
         list->data[list->data[j].next].prev = i;
     list->data[j].next = i;
+    ++list->free;
 }
 
 void list_delete(struct list *list, const int x)
@@ -80,4 +94,6 @@ void list_delete(struct list *list, const int x)
         list->head = list->data[i].next;
     if (list->data[i].next != 0)
         list->data[list->data[i].next].prev = list->data[i].prev;
+    else
+        list->tail = list->data[i].prev;
 }
