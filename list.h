@@ -24,5 +24,6 @@ void list_append(struct list *list, const int x);
 void list_insert(struct list *list, const int x, const int y);
 void list_delete(struct list *list, const int x);
 void list_delete_all(struct list *list);
+int list_index(struct list *list, const int index);
 
 #endif

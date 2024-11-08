@@ -108,3 +108,11 @@ void list_delete_all(struct list *list)
     list->tail = 0;
     list->free = 1;
 }
+
+int list_index(struct list *list, const int index)
+{
+    int i = list->head;
+    while (i != 0 && i != index)
+        i = list->data[i].next;
+    return list->data[i].key;
+}
