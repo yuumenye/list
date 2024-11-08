@@ -28,12 +28,13 @@ void list_dtor(struct list *list)
     list->data = NULL;
 }
 
-void list_traverse(struct list *list)
+void list_traverse(struct list const * const list)
 {
     int i = list->head;
     for (int i = list->head; i != 0; i = list->data[i].next)
         printf("%d ", list->data[i].key);
-    putchar('\n');
+    if (list->head != 0)
+        putchar('\n');
 }
 
 /* return x index in an array */
@@ -96,4 +97,14 @@ void list_delete(struct list *list, const int x)
         list->data[list->data[i].next].prev = list->data[i].prev;
     else
         list->tail = list->data[i].prev;
+}
+
+void list_delete_all(struct list *list)
+{
+    while (list->head != 0) {
+        list_delete(list, list->head);
+        list->head = list->data[list->head].next;
+    }
+    list->tail = 0;
+    list->free = 1;
 }
