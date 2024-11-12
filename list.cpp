@@ -2,8 +2,7 @@
 #include <stdio.h>
 #include "list.h"
 
-/* For simplicity's sake 0th element count as a real one
- * so list capacity is requested capacity + 1 */
+/* circular, doubly linked list with a sentinel */
 int list_ctor(struct list *list, int capacity)
 {
     if (!list)
@@ -30,46 +29,20 @@ void list_dtor(struct list *list)
 
 void list_traverse(struct list const * const list)
 {
-    int i = list->head;
-    for (int i = list->head; i != 0; i = list->data[i].next)
+    for (int i = list->data[0].next; i != 0; i = list->data[i].next)
         printf("%d ", list->data[i].key);
-    if (list->head != 0)
+    if (list->data[0].next != 0)
         putchar('\n');
 }
 
 /* return x index in an array */
 int list_search(struct list *list, const int x)
 {
-    int i = list->head;
-    while (i != 0 && list->data[i].key != x)
+    int i = list->data[0].next;
+    list->data[0].key = x;
+    while (list->data[i].key != x)
         i = list->data[i].next;
     return i;
-}
-
-/* insert before head */
-void list_prepend(struct list *list, const int x)
-{
-    int i = list->free;
-    list->data[i].key = x;
-    list->data[i].next = list->head;
-    list->data[i].prev = 0;
-    if (list->head != 0)
-        list->data[list->head].prev = i;
-    list->head = i;
-    ++list->free;
-}
-
-/* insert after tail */
-void list_append(struct list *list, const int x)
-{
-    int i = list->free;
-    list->data[i].key = x;
-    list->data[i].next = 0;
-    list->data[i].prev = list->tail;
-    if (list->tail != 0)
-        list->data[list->tail].next = i;
-    list->tail = i;
-    ++list->free;
 }
 
 /* insert x after y */
@@ -80,8 +53,7 @@ void list_insert(struct list *list, const int x, const int y)
     list->data[i].key = x;
     list->data[i].next = list->data[j].next;
     list->data[i].prev = j;
-    if (list->data[j].next != 0)
-        list->data[list->data[j].next].prev = i;
+    list->data[list->data[j].next].prev = i;
     list->data[j].next = i;
     ++list->free;
 }
@@ -89,30 +61,21 @@ void list_insert(struct list *list, const int x, const int y)
 void list_delete(struct list *list, const int x)
 {
     int i = list_search(list, x);
-    if (list->data[i].prev != 0)
-        list->data[list->data[i].prev].next = list->data[i].next;
-    else 
-        list->head = list->data[i].next;
-    if (list->data[i].next != 0)
-        list->data[list->data[i].next].prev = list->data[i].prev;
-    else
-        list->tail = list->data[i].prev;
+    list->data[list->data[i].prev].next = list->data[i].next;
+    list->data[list->data[i].next].prev = list->data[i].prev;
 }
 
 void list_delete_all(struct list *list)
 {
-    while (list->head != 0) {
-        list_delete(list, list->head);
-        list->head = list->data[list->head].next;
-    }
-    list->tail = 0;
-    list->free = 1;
+    while (list->data[0].next != 0)
+        list_delete(list, list->data[list->data[0].next].key);
 }
 
 int list_index(struct list *list, const int index)
 {
-    int i = list->head;
-    while (i != 0 && i != index)
+    int i = 0;
+    do
         i = list->data[i].next;
+    while (i != 0 && i != index);
     return list->data[i].key;
 }
