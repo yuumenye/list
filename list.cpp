@@ -6,6 +6,7 @@ static int list_head(const struct list * const list);
 static int list_tail(const struct list * const list);
 
 /* circular, doubly linked list with a sentinel */
+/* free elements form a singly linked list */
 int list_ctor(struct list *list, int capacity)
 {
         if (!list)
