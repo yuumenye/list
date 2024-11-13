@@ -17,10 +17,8 @@ int list_ctor(struct list *list, int capacity)
         list->capacity = capacity;
         ++list->free;
 
-        /*
-        for (int i = list->free; i < list->capacity; ++i)
-                list->data[i].key = -1;
-        */
+        for (int i = 1; i < capacity; ++i)
+                list->data[i].next = i+1;
         return 0;
 }
 
@@ -52,12 +50,12 @@ int list_search(struct list *list, const int x)
 int list_insert(struct list *list, const int x, const int i)
 {
         int j = list->free;
+        list->free = list->data[list->free].next;
         list->data[j].key = x;
         list->data[j].next = list->data[i].next;
         list->data[j].prev = i;
         list->data[list->data[i].next].prev = j;
         list->data[i].next = j;
-        ++list->free;
         return j;
 }
 
@@ -66,6 +64,9 @@ void list_delete(struct list *list, const int i)
 {
         list->data[list->data[i].prev].next = list->data[i].next;
         list->data[list->data[i].next].prev = list->data[i].prev;
+
+        list->data[i].next = list->data[list->free].next;
+        list->data[list->free].next = i;
 }
 
 void list_delete_all(struct list *list)
