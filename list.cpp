@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "list.h"
 
+static int list_head(const struct list * const list);
+static int list_tail(const struct list * const list);
+
 /* circular, doubly linked list with a sentinel */
 int list_ctor(struct list *list, int capacity)
 {
@@ -29,16 +32,16 @@ void list_dtor(struct list *list)
 
 void list_traverse(struct list const * const list)
 {
-        for (int i = list->data[0].next; i != 0; i = list->data[i].next)
+        for (int i = list_head(list); i != 0; i = list->data[i].next)
                 printf("%d ", list->data[i].key);
-        if (list->data[0].next != 0)
+        if (list_head(list) != 0)
                 putchar('\n');
 }
 
 /* return x index in an array */
 int list_search(struct list *list, const int x)
 {
-        int i = list->data[0].next;
+        int i = list_head(list);
         list->data[0].key = x;
         while (list->data[i].key != x)
                 i = list->data[i].next;
@@ -67,8 +70,8 @@ void list_delete(struct list *list, const int i)
 
 void list_delete_all(struct list *list)
 {
-        while (list->data[0].next != 0)
-                list_delete(list, list->data[list->data[0].next].key);
+        while (list_head(list) != 0)
+                list_delete(list, list->data[list_head(list)].key);
 }
 
 /* return key of i-th element in a list */
@@ -79,4 +82,14 @@ int list_index(struct list *list, const int i)
                 j = list->data[j].next;
         } while (j != 0 && j != i);
         return list->data[j].key;
+}
+
+static int list_head(const struct list * const list)
+{
+        return list->data[0].next;
+}
+
+static int list_tail(const struct list * const list)
+{
+        return list->data[0].prev;
 }
