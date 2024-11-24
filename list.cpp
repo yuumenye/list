@@ -5,6 +5,17 @@
 static int list_head(const struct list * const list);
 static int list_tail(const struct list * const list);
 
+static void generate_filename(char *filename, int namelen);
+static void compile_dot(char *filename);
+static void write_all(FILE *file, struct list *list);
+static void write_params(FILE *file);
+static void write_data(FILE *file, struct list *list);
+static void write_data_nodes(FILE *file, struct list *list);
+static void write_data_edges(FILE *file, struct list *list);
+static void write_free(FILE *file, struct list *list);
+static void write_free_nodes(FILE *file, struct list *list);
+static void write_free_edges(FILE *file, struct list *list);
+
 /* circular, doubly linked list with a sentinel */
 /* free elements form a singly linked list */
 int list_ctor(struct list *list, int capacity)
@@ -91,7 +102,115 @@ static int list_head(const struct list * const list)
         return list->data[0].next;
 }
 
+/* remove static */
 static int list_tail(const struct list * const list)
 {
         return list->data[0].prev;
+}
+
+/* dump list using GraphViz */
+void list_dump(struct list *list)
+{
+        const int namelen = 20;
+        char filename[namelen] = "";
+        generate_filename(filename, namelen);
+
+        FILE *file = fopen(filename, "w");
+        write_all(file, list);
+        fclose(file);
+
+        compile_dot(filename);
+}
+
+static void generate_filename(char *filename, int namelen)
+{
+        static int filenum = 0;
+        snprintf(filename, namelen, "list%03d.dot", filenum++);
+}
+
+static void compile_dot(char *filename)
+{
+        const int cmdlen = 100;
+        char cmd[cmdlen] = "";
+        snprintf(cmd, cmdlen, "dot -T png %s -o %.7s.png", filename, filename);
+        system(cmd);
+}
+
+static void write_all(FILE *file, struct list *list)
+{
+        fprintf(file, "digraph dump {\n");
+        write_params(file);
+        write_data(file, list);
+        write_free(file, list);
+        fprintf(file, "}\n");
+}
+
+static void write_params(FILE *file)
+{
+        fprintf(file, "  rankdir = LR\n");
+        fprintf(file, "  node [\n");
+        fprintf(file, "  shape = record\n");
+        fprintf(file, "  style = filled\n");
+        fprintf(file, "  fillcolor = \"#FFB26F\"\n");
+        fprintf(file, "  ]\n");
+}
+
+static void write_data(FILE *file, struct list *list)
+{
+        fprintf(file, "  subgraph cluster_data {\n");
+        write_data_nodes(file, list);
+        write_data_edges(file, list);
+        fprintf(file, "  }\n");
+}
+
+static void write_data_nodes(FILE *file, struct list *list)
+{
+        int i = 0;
+        do {
+                fprintf(file, "    n%p [ label = \"i: %d|p: %d|k: %d|n: %d\" ]\n",
+                        &list->data[i], i, list->data[i].prev,
+                        list->data[i].key, list->data[i].next);
+                i = list->data[i].next;
+        } while (i != 0);
+}
+static void write_data_edges(FILE *file, struct list *list)
+{
+        int i = 0;
+        do {
+                fprintf(file, "  n%p -> n%p\n",
+                        &list->data[i], &list->data[list->data[i].next]);
+                i = list->data[i].next;
+        } while (i != 0);
+
+        i = 0;
+        do {
+                fprintf(file, "  n%p -> n%p\n",
+                        &list->data[i], &list->data[list->data[i].prev]);
+                i = list->data[i].prev;
+        } while (i != 0);
+}
+
+static void write_free_nodes(FILE *file, struct list *list)
+{
+        for (int i = list->free; i != list->capacity; i = list->data[i].next) {
+                fprintf(file, "    n%p [ label = \"i: %d|p: %d|k: %d|n: %d\" ]\n",
+                        &list->data[i], i, list->data[i].prev,
+                        list->data[i].key, list->data[i].next);
+        }
+}
+static void write_free_edges(FILE *file, struct list *list)
+{
+        for (int i = list->free; i != list->capacity-1; i = list->data[i].next) {
+                fprintf(file, "    n%p -> n%p\n",
+                        &list->data[i], &list->data[list->data[i].next]);
+        }
+}
+
+static void write_free(FILE *file, struct list *list)
+{
+        fprintf(file, "  subgraph cluster_free {\n");
+        fprintf(file, "  label = \"free\";\n");
+        write_free_nodes(file, list);
+        write_free_edges(file, list);
+        fprintf(file, "  }\n");
 }

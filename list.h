@@ -22,4 +22,5 @@ void list_delete(struct list *list, const int x);
 void list_delete_all(struct list *list);
 int list_index(struct list *list, const int i);
 
+void list_dump(struct list *list);
 #endif
